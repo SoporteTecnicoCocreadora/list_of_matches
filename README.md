@@ -13,7 +13,6 @@ contra la lista de seguimiento de un bootcamp) y saber qué personas están en a
    (si el nombre y el apellido vienen separados, marca ambas) y columna de correo.
 4. Elige cómo comparar (correo y nombre, solo correo o solo nombre) y pulsa **Comparar listas**.
 5. **Ver lista aquí** muestra los resultados en pestañas; **Descargar Excel** genera un archivo con:
-   - `Resumen`: totales.
    - `Coincidencias`: cada pareja encontrada, con el motivo.
    - `Lista 1` y `Lista 2`: las listas originales con cada fila coloreada y columnas nuevas con la
      persona con la que coincidió (verde: total, amarillo: parcial, rojo: sin coincidencia).

@@ -269,26 +269,7 @@
     const wb = new ExcelJS.Workbook();
     wb.creator = 'Cruce de listas - La Cocreadora';
 
-    // Resumen
-    const res = wb.addWorksheet('Resumen');
-    res.columns = [{ width: 34 }, { width: 60 }];
-    res.addRow(['Cruce de listas']).font = { bold: true, size: 14 };
-    res.addRow(['Fecha', new Date().toLocaleString('es-CO')]);
-    res.addRow(['Lista 1', `${state.A.fileName} (hoja ${state.A.sheetName})`]);
-    res.addRow(['Lista 2', `${state.B.fileName} (hoja ${state.B.sheetName})`]);
-    res.addRow(['Comparado por', { ambos: 'Correo y nombre', correo: 'Solo correo', nombre: 'Solo nombre' }[state.mode]]);
-    res.addRow([]);
-    [
-      ['Coincidencia al 100%', r.total.length, 'total'],
-      ['Coincidencia parcial (solo correo o solo nombre)', r.parcial.length, 'correo'],
-      ['Lista 1 sin coincidencia', r.sinCoincidenciaA.length, 'none'],
-      ['Lista 2 sin pareja', r.sinCoincidenciaB.length, 'none'],
-    ].forEach(([label, n, type]) => {
-      const row = res.addRow([label, n]);
-      row.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: FILL[type] } };
-    });
-
-    // Parejas encontradas
+    // Parejas encontradas (primera hoja)
     const pairsSheet = wb.addWorksheet('Coincidencias');
     pairsSheet.columns = [
       { header: 'Resultado', width: 22 },
