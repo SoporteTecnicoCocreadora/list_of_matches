@@ -95,11 +95,17 @@
       .concat(list.headers.map((h, i) => `<option value="${i}" ${list.emailColumn === i ? 'selected' : ''}>${esc(h)}</option>`))
       .join('');
 
+    // Las columnas se detectan solas; elegirlas a mano queda plegado y solo se abre si no se
+    // encontró ni nombre ni correo (si no, la lista de todas las columnas solo estorba).
+    const detected = list.nameColumns.length > 0 || list.emailColumn != null;
     box.innerHTML = `
       ${sheets.length > 1 ? `<label class="field">Hoja<select data-role="sheet">${sheets.map((s) => `<option ${s === list.sheetName ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>` : ''}
-      <p class="hint" style="margin:0">Encabezados detectados en la fila ${list.headerRow + 1}.</p>
-      <div class="field"><span class="hint" style="margin:0">Columna(s) de nombre <small>(si el nombre y el apellido vienen separados, marca ambas)</small></span><div class="checks" data-role="names">${nameChecks}</div></div>
-      <label class="field">Columna de correo<select data-role="email">${emailOptions}</select></label>
+      <p class="detected" data-role="detected"></p>
+      <details class="columns" ${detected ? '' : 'open'}>
+        <summary>Cambiar columnas</summary>
+        <div class="field"><span class="hint" style="margin:0">Columna(s) de nombre <small>(si el nombre y el apellido vienen separados, marca ambas)</small></span><div class="checks" data-role="names">${nameChecks}</div></div>
+        <label class="field">Columna de correo<select data-role="email">${emailOptions}</select></label>
+      </details>
       <div class="preview" data-role="preview"></div>`;
     box.hidden = false;
 
@@ -126,6 +132,9 @@
   function renderPreview(key) {
     const list = state[key];
     const box = $(`.list-card[data-list="${key}"] [data-role=preview]`);
+    const nameText = list.nameColumns.map((c) => `<b>${esc(list.headers[c])}</b>`).join(' + ') || '<i>ninguna</i>';
+    const emailText = list.emailColumn == null ? '<i>ninguna</i>' : `<b>${esc(list.headers[list.emailColumn])}</b>`;
+    $(`.list-card[data-list="${key}"] [data-role=detected]`).innerHTML = `Se compara por nombre: ${nameText} · correo: ${emailText}`;
     const data = dataRows(list);
     const people = data.length;
     if (!list.nameColumns.length && list.emailColumn == null) {

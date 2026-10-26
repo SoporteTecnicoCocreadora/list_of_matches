@@ -64,6 +64,10 @@ body {
 .config .field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; font-size: .88rem; color: var(--muted); min-width: 0; }
 /* Las opciones largas (vista previa del encabezado) no deben ensanchar la tarjeta */
 .config select { width: 100%; min-width: 0; padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px; font: inherit; color: var(--text); background: #fff; text-overflow: ellipsis; }
+.detected { margin: 0; font-size: .9rem; }
+.columns summary { cursor: pointer; color: var(--accent-dark); font-size: .85rem; width: fit-content; }
+.columns[open] { display: grid; gap: 10px; }
+.columns[open] summary { margin-bottom: 2px; }
 .checks { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .88rem; color: var(--text); }
 .checks label { display: inline-flex; gap: 4px; align-items: center; }
 .preview { font-size: .8rem; color: var(--muted); overflow-x: auto; }

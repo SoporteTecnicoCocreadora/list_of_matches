@@ -9,8 +9,9 @@ contra la lista de seguimiento de un bootcamp) y saber qué personas están en a
 
 1. Abre `index.html` en el navegador (doble clic, o publicado en GitHub Pages).
 2. Sube la **Lista 1** (base) y la **Lista 2**. Acepta `.xlsx`, `.xls` y `.csv`.
-3. Revisa lo que se detectó en cada lista (el encabezado se busca solo): columna(s) de nombre
-   (si el nombre y el apellido vienen separados, marca ambas) y columna de correo.
+3. La página detecta sola el encabezado y las columnas de nombre y de correo, y muestra cuáles
+   usará. Si se equivoca, usa **Cambiar columnas** (si el nombre y el apellido vienen separados,
+   marca ambas).
 4. Elige cómo comparar (correo y nombre, solo correo o solo nombre) y pulsa **Comparar listas**.
 5. **Ver lista aquí** muestra los resultados en pestañas; **Descargar Excel** genera un archivo con:
    - `Coincidencias`: cada pareja encontrada, con el motivo.
