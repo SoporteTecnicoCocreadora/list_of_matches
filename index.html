@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es" translate="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Cruce de listas</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <h1>Cruce de listas</h1>
+      <p>Sube dos listas de Excel y encuentra qué personas están en ambas, comparando por correo y nombre.
+        <span class="private">Los archivos se procesan en tu navegador: no se suben a ningún servidor.</span></p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="step">
+      <h2><span class="num">1</span> Sube las listas</h2>
+      <div class="lists">
+        <div class="list-card" data-list="A">
+          <h3>Lista 1 <small>(base, p. ej. asistencia de Meet)</small></h3>
+          <label class="drop">
+            <input type="file" accept=".xlsx,.xls,.csv" hidden>
+            <span class="drop-text">Arrastra el archivo aquí o <u>haz clic para elegirlo</u></span>
+          </label>
+          <div class="config" hidden></div>
+        </div>
+        <div class="list-card" data-list="B">
+          <h3>Lista 2 <small>(contra la que se compara, p. ej. seguimiento)</small></h3>
+          <label class="drop">
+            <input type="file" accept=".xlsx,.xls,.csv" hidden>
+            <span class="drop-text">Arrastra el archivo aquí o <u>haz clic para elegirlo</u></span>
+          </label>
+          <div class="config" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">2</span> Compara</h2>
+      <div class="mode">
+        <span>Comparar por:</span>
+        <label><input type="radio" name="mode" value="ambos" checked> Correo y nombre <em>(recomendado)</em></label>
+        <label><input type="radio" name="mode" value="correo"> Solo correo</label>
+        <label><input type="radio" name="mode" value="nombre"> Solo nombre</label>
+      </div>
+      <button id="compare" class="btn primary" disabled>Comparar listas</button>
+      <p id="compare-hint" class="hint">Sube las dos listas para comparar.</p>
+    </section>
+
+    <section id="results" class="step" hidden>
+      <h2><span class="num">3</span> Resultados</h2>
+      <div id="summary" class="summary"></div>
+      <div class="actions">
+        <button id="toggle-list" class="btn primary">Ver lista aquí</button>
+        <button id="download" class="btn">Descargar Excel</button>
+      </div>
+      <div id="list-view" hidden>
+        <div class="tabs" role="tablist"></div>
+        <div id="tab-help" class="hint"></div>
+        <div class="table-wrap"><table id="result-table"></table></div>
+      </div>
+    </section>
+
+    <section class="step help">
+      <h2>¿Cómo compara?</h2>
+      <ul>
+        <li><b>Coincidencia total:</b> el correo coincide y el nombre tiene al menos una palabra en común (o el correo es idéntico).</li>
+        <li><b>Coincidencia parcial:</b> solo coincide el correo, o solo el nombre (al menos nombre y apellido). Revísalas a mano.</li>
+        <li><b>Correos ocultos de Meet</b> (<code>fr.g*************@***.com</code>): se usan las letras visibles, el largo del correo (cada * es una letra) y el final del dominio.</li>
+        <li>Se ignoran mayúsculas, tildes y signos, y se toleran pequeños errores de digitación en los nombres. Cada persona se empareja una sola vez.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="matcher.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

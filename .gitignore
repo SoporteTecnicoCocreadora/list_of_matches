@@ -1,0 +1,6 @@
+# Nunca subir listas reales: tienen datos personales
+*.xlsx
+*.xls
+*.csv
+node_modules/
+.DS_Store
