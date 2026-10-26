@@ -3,7 +3,7 @@
   'use strict';
 
   const TYPE_LABEL = {
-    total: 'Coincidencia total',
+    total: 'Coincidencia al 100%',
     correo: 'Coincide el correo',
     nombre: 'Coincide el nombre',
     none: 'Sin coincidencia',
@@ -88,10 +88,6 @@
     const card = document.querySelector(`.list-card[data-list="${key}"]`);
     const box = $('.config', card);
     const sheets = list.workbook.SheetNames;
-    const headerOptions = list.rows.slice(0, 15).map((r, i) => {
-      const preview = r.map(cellText).filter((c) => c.trim()).slice(0, 4).join(' | ');
-      return `<option value="${i}" ${i === list.headerRow ? 'selected' : ''}>Fila ${i + 1}: ${esc(preview.slice(0, 60)) || '(vacía)'}</option>`;
-    });
     const nameChecks = list.headers
       .map((h, i) => `<label><input type="checkbox" value="${i}" ${list.nameColumns.includes(i) ? 'checked' : ''}> ${esc(h)}</label>`)
       .join('');
@@ -101,7 +97,7 @@
 
     box.innerHTML = `
       ${sheets.length > 1 ? `<label class="field">Hoja<select data-role="sheet">${sheets.map((s) => `<option ${s === list.sheetName ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>` : ''}
-      <label class="field">Fila de encabezados<select data-role="header">${headerOptions.join('')}</select></label>
+      <p class="hint" style="margin:0">Encabezados detectados en la fila ${list.headerRow + 1}.</p>
       <div class="field"><span class="hint" style="margin:0">Columna(s) de nombre <small>(si el nombre y el apellido vienen separados, marca ambas)</small></span><div class="checks" data-role="names">${nameChecks}</div></div>
       <label class="field">Columna de correo<select data-role="email">${emailOptions}</select></label>
       <div class="preview" data-role="preview"></div>`;
@@ -109,11 +105,6 @@
 
     $('[data-role=sheet]', box)?.addEventListener('change', (e) => {
       selectSheet(key, e.target.value);
-      hideResults();
-      updateCompareButton();
-    });
-    $('[data-role=header]', box).addEventListener('change', (e) => {
-      setHeaderRow(key, Number(e.target.value));
       hideResults();
       updateCompareButton();
     });
@@ -194,7 +185,7 @@
   function renderSummary() {
     const r = state.result;
     $('#summary').innerHTML = `
-      <div class="stat total"><b>${r.total.length}</b><span>Coincidencia total</span></div>
+      <div class="stat total"><b>${r.total.length}</b><span>Coincidencia al 100%</span></div>
       <div class="stat parcial"><b>${r.parcial.length}</b><span>Coincidencia parcial</span></div>
       <div class="stat none"><b>${r.sinCoincidenciaA.length}</b><span>Lista 1 sin coincidencia</span></div>
       <div class="stat other"><b>${r.sinCoincidenciaB.length}</b><span>Lista 2 sin pareja</span></div>`;
@@ -209,8 +200,8 @@
 
   const TABS = [
     { id: 'total', label: 'Coincidencia al 100%', help: 'Coinciden el correo y el nombre: es la misma persona.' },
-    { id: 'parcial', label: 'Coincidencia parcial', help: 'Solo coincide el correo o solo el nombre. Conviene revisarlas a mano.' },
-    { id: 'sinA', label: 'Sin concordancia', help: 'Personas de la Lista 1 que no aparecen en la Lista 2.' },
+    { id: 'parcial', label: 'Coincidencia parcial', help: 'Coincide solo el correo o solo el nombre. Conviene revisarlas a mano.' },
+    { id: 'sinA', label: 'Sin concordancia', help: 'Personas de la Lista 1 que no coinciden con nadie de la Lista 2, ni por correo ni por nombre.' },
     { id: 'sinB', label: 'Lista 2 sin pareja', help: 'Personas de la Lista 2 que no aparecen en la Lista 1.' },
   ];
 
@@ -288,7 +279,7 @@
     res.addRow(['Comparado por', { ambos: 'Correo y nombre', correo: 'Solo correo', nombre: 'Solo nombre' }[state.mode]]);
     res.addRow([]);
     [
-      ['Coincidencia total', r.total.length, 'total'],
+      ['Coincidencia al 100%', r.total.length, 'total'],
       ['Coincidencia parcial (solo correo o solo nombre)', r.parcial.length, 'correo'],
       ['Lista 1 sin coincidencia', r.sinCoincidenciaA.length, 'none'],
       ['Lista 2 sin pareja', r.sinCoincidenciaB.length, 'none'],

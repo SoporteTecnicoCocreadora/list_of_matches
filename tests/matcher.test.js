@@ -53,6 +53,14 @@ test('clasifica en total, solo correo, solo nombre y sin coincidencia, emparejan
   assert.deepEqual(r.sinCoincidenciaB.map((p) => p.index), [3]);
 });
 
+test('al 100% exige correo Y nombre: con una sola palabra del nombre, o el correo igual y otro nombre, es parcial', () => {
+  const meet = list([['German Rojas', 'vicg******@***.com'], ['Sala Juntas', 'ana@x.com']], [0], 1);
+  const seg = list([['Victor Rojas', 'vicger3108@gmail.com'], ['Ana Ruiz', 'ana@x.com']], [0], 1);
+  const r = M.matchLists(meet, seg);
+  assert.equal(r.total.length, 0);
+  assert.deepEqual(r.parcial.map((p) => p.type), ['correo', 'correo']);
+});
+
 test('modo "solo correo" y "solo nombre"', () => {
   const a = list([['Ana Ruiz', 'ana@x.com']], [0], 1);
   const b = list([['Otra Persona', 'ana@x.com'], ['Ana Ruiz', 'otra@x.com']], [0], 1);

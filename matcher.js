@@ -3,12 +3,13 @@
  *
  * Compara las personas de la Lista 1 (base) con las de la Lista 2 usando el correo y el
  * nombre, y clasifica cada pareja en:
- *   - "total":   el correo coincide (exacto, o compatible si viene oculto con *) y el nombre
- *                tiene al menos una palabra en común; o el correo es idéntico.
- *   - "correo":  el correo es compatible pero el nombre no se parece.
- *   - "nombre":  el nombre coincide (al menos dos palabras, p. ej. nombre y apellido) pero el
- *                correo no se pudo confirmar (distinto, vacío o solo se parece el inicio).
- *   - sin coincidencia.
+ *   - "total":   coinciden el correo (exacto, o compatible si viene oculto con *) Y el nombre.
+ *   - "correo":  coincide el correo pero el nombre no.
+ *   - "nombre":  coincide el nombre pero el correo no se pudo confirmar (distinto, vacío o solo
+ *                se parece el inicio).
+ *   - sin coincidencia: no coincide ni el correo ni el nombre.
+ * "El nombre coincide" = al menos dos palabras en común (p. ej. nombre y apellido), o el mismo
+ * nombre de una sola palabra. Una sola palabra suelta (solo "Carlos") no cuenta: es muy común.
  *
  * Correos ocultos (como los exporta Google Meet): "fr.g*************@***.com".
  *   - En la parte local cada * es UNA letra: el largo del correo se conserva.
@@ -162,7 +163,8 @@
     } else if (mode === 'nombre') {
       if (name.strong) type = 'total';
       else if (name.matched >= 1 && name.score >= 0.9 && a.tokens.length > 1 && b.tokens.length > 1) type = 'nombre';
-    } else if (email === 'exacto' || (emailOk && name.matched >= 1)) {
+    } else if (emailOk && name.strong) {
+      // Coincidencia al 100%: el correo Y el nombre coinciden
       type = 'total';
     } else if (emailOk) {
       type = 'correo';

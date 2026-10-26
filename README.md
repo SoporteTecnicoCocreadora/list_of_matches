@@ -9,7 +9,7 @@ contra la lista de seguimiento de un bootcamp) y saber qué personas están en a
 
 1. Abre `index.html` en el navegador (doble clic, o publicado en GitHub Pages).
 2. Sube la **Lista 1** (base) y la **Lista 2**. Acepta `.xlsx`, `.xls` y `.csv`.
-3. Revisa lo que se detectó en cada lista: hoja, fila de encabezados, columna(s) de nombre
+3. Revisa lo que se detectó en cada lista (el encabezado se busca solo): columna(s) de nombre
    (si el nombre y el apellido vienen separados, marca ambas) y columna de correo.
 4. Elige cómo comparar (correo y nombre, solo correo o solo nombre) y pulsa **Comparar listas**.
 5. **Ver lista aquí** muestra los resultados en pestañas; **Descargar Excel** genera un archivo con:
@@ -22,10 +22,16 @@ contra la lista de seguimiento de un bootcamp) y saber qué personas están en a
 
 | Resultado | Cuándo |
 |---|---|
-| Coincidencia total | El correo coincide y el nombre tiene al menos una palabra en común, o el correo es idéntico. |
-| Coincide el correo | El correo coincide pero el nombre no se parece (p. ej. un apodo en Meet). |
-| Coincide el nombre | Coinciden al menos dos palabras del nombre (nombre y apellido) pero el correo no se pudo confirmar. |
-| Sin coincidencia | Nada de lo anterior. |
+| Coincidencia al 100% | Coinciden el correo **y** el nombre. |
+| Coincide el correo (parcial) | El correo coincide pero el nombre no (p. ej. un apodo en Meet). |
+| Coincide el nombre (parcial) | El nombre coincide pero el correo no se pudo confirmar (otro correo o vacío). |
+| Sin concordancia | No coincide ni el correo ni el nombre. |
+
+"El nombre coincide" = al menos dos palabras en común (p. ej. nombre y apellido), sin importar
+el orden, o el mismo nombre de una sola palabra. Una sola palabra suelta no basta.
+
+Solo se comparan las columnas de nombre y de correo marcadas en cada lista (se detectan solas
+por el encabezado). Si el nombre y el apellido vienen en columnas separadas, se unen.
 
 - **Correos ocultos de Meet** (`fr.g*************@***.com`): se usan las letras visibles, el largo
   del correo (en la parte antes de la `@` cada `*` es una letra) y el final del dominio (`.com`, `.co`).
