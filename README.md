@@ -15,7 +15,7 @@ contra la lista de seguimiento de un bootcamp) y saber qué personas están en a
 5. **Ver lista aquí** muestra los resultados en pestañas; **Descargar Excel** genera un archivo con:
    - `Coincidencias`: cada pareja encontrada, con el motivo.
    - `Lista 1` y `Lista 2`: las listas originales con cada fila coloreada y columnas nuevas con la
-     persona con la que coincidió (verde: total, amarillo: parcial, rojo: sin coincidencia).
+     persona con la que coincidió (verde: al 100%, amarillo: parcial, rojo: está solo en esa lista).
 
 ## Cómo compara
 
@@ -24,7 +24,7 @@ contra la lista de seguimiento de un bootcamp) y saber qué personas están en a
 | Coincidencia al 100% | Coinciden el correo **y** el nombre. |
 | Coincide el correo (parcial) | El correo coincide pero el nombre no (p. ej. un apodo en Meet). |
 | Coincide el nombre (parcial) | El nombre coincide pero el correo no se pudo confirmar (otro correo o vacío). |
-| Sin concordancia | No coincide ni el correo ni el nombre. |
+| Están solo en Lista 1 / solo en Lista 2 | Personas de esa lista que no coinciden con nadie de la otra, ni por correo ni por nombre. |
 
 "El nombre coincide" = al menos dos palabras en común (p. ej. nombre y apellido), sin importar
 el orden, o el mismo nombre de una sola palabra. Una sola palabra suelta no basta.

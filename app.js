@@ -182,13 +182,19 @@
     $('#results').hidden = true;
   }
 
+  /** Nombre del archivo sin extensión, recortado para que quepa en botones y tarjetas. */
+  function listName(key, max = 45) {
+    const name = state[key].fileName.replace(/\.(xlsx|xls|csv)$/i, '');
+    return name.length > max ? `${name.slice(0, max - 1)}…` : name;
+  }
+
   function renderSummary() {
     const r = state.result;
     $('#summary').innerHTML = `
       <div class="stat total"><b>${r.total.length}</b><span>Coincidencia al 100%</span></div>
       <div class="stat parcial"><b>${r.parcial.length}</b><span>Coincidencia parcial</span></div>
-      <div class="stat none"><b>${r.sinCoincidenciaA.length}</b><span>Lista 1 sin coincidencia</span></div>
-      <div class="stat other"><b>${r.sinCoincidenciaB.length}</b><span>Lista 2 sin pareja</span></div>`;
+      <div class="stat none"><b>${r.sinCoincidenciaA.length}</b><span>Solo en Lista 1 (${esc(listName('A', 30))})</span></div>
+      <div class="stat other"><b>${r.sinCoincidenciaB.length}</b><span>Solo en Lista 2 (${esc(listName('B', 30))})</span></div>`;
   }
 
   $('#toggle-list').addEventListener('click', () => {
@@ -198,18 +204,19 @@
     if (!view.hidden) renderTabs();
   });
 
+  // Las etiquetas de "solo en…" llevan el nombre del archivo de cada lista
   const TABS = [
-    { id: 'total', label: 'Coincidencia al 100%', help: 'Coinciden el correo y el nombre: es la misma persona.' },
-    { id: 'parcial', label: 'Coincidencia parcial', help: 'Coincide solo el correo o solo el nombre. Conviene revisarlas a mano.' },
-    { id: 'sinA', label: 'Sin concordancia', help: 'Personas de la Lista 1 que no coinciden con nadie de la Lista 2, ni por correo ni por nombre.' },
-    { id: 'sinB', label: 'Lista 2 sin pareja', help: 'Personas de la Lista 2 que no aparecen en la Lista 1.' },
+    { id: 'total', label: () => 'Coincidencia al 100%', help: 'Coinciden el correo y el nombre: es la misma persona.' },
+    { id: 'parcial', label: () => 'Coincidencia parcial', help: 'Coincide solo el correo o solo el nombre.' },
+    { id: 'sinA', label: () => `Están solo en Lista 1 (${listName('A')})`, help: 'Personas de la Lista 1 que no coinciden con nadie de la Lista 2, ni por correo ni por nombre.' },
+    { id: 'sinB', label: () => `Están solo en Lista 2 (${listName('B')})`, help: 'Personas de la Lista 2 que no coinciden con nadie de la Lista 1, ni por correo ni por nombre.' },
   ];
 
   function renderTabs() {
     const r = state.result;
     const counts = { total: r.total.length, parcial: r.parcial.length, sinA: r.sinCoincidenciaA.length, sinB: r.sinCoincidenciaB.length };
     $('.tabs').innerHTML = TABS.map(
-      (t) => `<button class="tab" role="tab" data-tab="${t.id}" aria-selected="${state.tab === t.id}">${t.label} (${counts[t.id]})</button>`
+      (t) => `<button class="tab" role="tab" data-tab="${t.id}" aria-selected="${state.tab === t.id}">${esc(t.label())} · ${counts[t.id]}</button>`
     ).join('');
     document.querySelectorAll('.tab').forEach((b) =>
       b.addEventListener('click', () => {
@@ -326,7 +333,7 @@
         tail = [TYPE_LABEL[pair.type], other.name, other.rawEmail, otherList.headerRow + 2 + other.index, pair.reason];
       } else if (unmatched.has(i)) {
         type = 'none';
-        tail = [TYPE_LABEL.none, '', '', '', ''];
+        tail = [`Solo en ${title}`, '', '', '', ''];
       }
       const added = ws.addRow([...values, ...tail]);
       added.eachCell((cell) => {
