@@ -4,11 +4,12 @@
 
   const TYPE_LABEL = {
     total: 'Coincidencia al 100%',
+    cedula: 'Coincide la cédula',
     correo: 'Coincide el correo',
     nombre: 'Coincide el nombre',
     none: 'Sin coincidencia',
   };
-  const FILL = { total: 'FFC6EFCE', correo: 'FFFFEB9C', nombre: 'FFFFEB9C', none: 'FFFFC7CE' };
+  const FILL = { total: 'FFC6EFCE', cedula: 'FFFFEB9C', correo: 'FFFFEB9C', nombre: 'FFFFEB9C', none: 'FFFFC7CE' };
 
   const state = { A: null, B: null, result: null, mode: 'ambos', tab: 'total' };
 
@@ -42,7 +43,9 @@
     const dropText = $('.drop-text', card);
     try {
       const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+      const workbook = /\.csv$/i.test(file.name)
+        ? XLSX.read(decodeCsv(buffer), { type: 'string', cellDates: true })
+        : XLSX.read(buffer, { type: 'array', cellDates: true });
       state[key] = { fileName: file.name, workbook };
       selectSheet(key, workbook.SheetNames[0]);
       $('.drop', card).classList.add('loaded');
@@ -56,6 +59,15 @@
     }
     hideResults();
     updateCompareButton();
+  }
+
+  /** Texto de un .csv: UTF-8 si es válido, si no Windows-1252 (el que usa Excel en español). */
+  function decodeCsv(buffer) {
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(buffer).replace(/^﻿/, '');
+    } catch {
+      return new TextDecoder('windows-1252').decode(buffer);
+    }
   }
 
   function selectSheet(key, sheetName) {
@@ -91,20 +103,22 @@
     const nameChecks = list.headers
       .map((h, i) => `<label><input type="checkbox" value="${i}" ${list.nameColumns.includes(i) ? 'checked' : ''}> ${esc(h)}</label>`)
       .join('');
-    const emailOptions = ['<option value="">— Sin correo —</option>']
-      .concat(list.headers.map((h, i) => `<option value="${i}" ${list.emailColumn === i ? 'selected' : ''}>${esc(h)}</option>`))
-      .join('');
+    const columnOptions = (empty, selected) =>
+      [`<option value="">${empty}</option>`]
+        .concat(list.headers.map((h, i) => `<option value="${i}" ${selected === i ? 'selected' : ''}>${esc(h)}</option>`))
+        .join('');
 
     // Las columnas se detectan solas; elegirlas a mano queda plegado y solo se abre si no se
-    // encontró ni nombre ni correo (si no, la lista de todas las columnas solo estorba).
-    const detected = list.nameColumns.length > 0 || list.emailColumn != null;
+    // encontró ni nombre, ni correo, ni cédula (si no, la lista de todas las columnas solo estorba).
+    const detected = listReady(list);
     box.innerHTML = `
       ${sheets.length > 1 ? `<label class="field">Hoja<select data-role="sheet">${sheets.map((s) => `<option ${s === list.sheetName ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>` : ''}
       <p class="detected" data-role="detected"></p>
       <details class="columns" ${detected ? '' : 'open'}>
         <summary>Cambiar columnas</summary>
         <div class="field"><span class="hint" style="margin:0">Columna(s) de nombre <small>(si el nombre y el apellido vienen separados, marca ambas)</small></span><div class="checks" data-role="names">${nameChecks}</div></div>
-        <label class="field">Columna de correo<select data-role="email">${emailOptions}</select></label>
+        <label class="field">Columna de correo<select data-role="email">${columnOptions('— Sin correo —', list.emailColumn)}</select></label>
+        <label class="field">Columna de cédula<select data-role="doc">${columnOptions('— Sin cédula —', list.docColumn)}</select></label>
       </details>
       <div class="preview" data-role="preview"></div>`;
     box.hidden = false;
@@ -120,12 +134,14 @@
       hideResults();
       updateCompareButton();
     });
-    $('[data-role=email]', box).addEventListener('change', (e) => {
-      list.emailColumn = e.target.value === '' ? null : Number(e.target.value);
-      renderPreview(key);
-      hideResults();
-      updateCompareButton();
-    });
+    [['email', 'emailColumn'], ['doc', 'docColumn']].forEach(([role, field]) =>
+      $(`[data-role=${role}]`, box).addEventListener('change', (e) => {
+        list[field] = e.target.value === '' ? null : Number(e.target.value);
+        renderPreview(key);
+        hideResults();
+        updateCompareButton();
+      })
+    );
     renderPreview(key);
   }
 
@@ -133,18 +149,21 @@
     const list = state[key];
     const box = $(`.list-card[data-list="${key}"] [data-role=preview]`);
     const nameText = list.nameColumns.map((c) => `<b>${esc(list.headers[c])}</b>`).join(' + ') || '<i>ninguna</i>';
-    const emailText = list.emailColumn == null ? '<i>ninguna</i>' : `<b>${esc(list.headers[list.emailColumn])}</b>`;
-    $(`.list-card[data-list="${key}"] [data-role=detected]`).innerHTML = `Se compara por nombre: ${nameText} · correo: ${emailText}`;
+    const colText = (c) => (c == null ? '<i>ninguna</i>' : `<b>${esc(list.headers[c])}</b>`);
+    // La cédula solo se menciona si la lista la trae, para no confundir en las que no
+    const docText = list.docColumn == null ? '' : ` · cédula: ${colText(list.docColumn)}`;
+    $(`.list-card[data-list="${key}"] [data-role=detected]`).innerHTML =
+      `Se compara por nombre: ${nameText} · correo: ${colText(list.emailColumn)}${docText}`;
     const data = dataRows(list);
     const people = data.length;
-    if (!list.nameColumns.length && list.emailColumn == null) {
-      box.innerHTML = '<p class="warn">Elige al menos una columna de nombre o de correo.</p>';
+    if (!listReady(list)) {
+      box.innerHTML = '<p class="warn">Elige al menos una columna de nombre, de correo o de cédula.</p>';
       return;
     }
     const sample = data.slice(0, 3).map((r) => {
       const name = list.nameColumns.map((c) => cellText(r[c])).join(' ');
-      const mail = list.emailColumn == null ? '' : cellText(r[list.emailColumn]);
-      return `<tr><td>${esc(name)}</td><td>${esc(mail)}</td></tr>`;
+      const others = [list.emailColumn, list.docColumn].filter((c) => c != null).map((c) => `<td>${esc(cellText(r[c]))}</td>`);
+      return `<tr><td>${esc(name)}</td>${others.join('')}</tr>`;
     });
     box.innerHTML = `<p style="margin:0 0 4px">${people} fila${people === 1 ? '' : 's'} con datos. Ejemplo:</p><table>${sample.join('')}</table>`;
   }
@@ -155,15 +174,20 @@
   }
 
   function listReady(list) {
-    return list && (list.nameColumns.length || list.emailColumn != null);
+    return Boolean(list && (list.nameColumns.length || list.emailColumn != null || list.docColumn != null));
   }
 
   function updateCompareButton() {
     const ready = listReady(state.A) && listReady(state.B);
     $('#compare').disabled = !ready;
-    $('#compare-hint').textContent = ready
+    const hint = $('#compare-hint');
+    hint.textContent = ready
       ? 'Listo para comparar.'
-      : 'Sube las dos listas y elige en cada una la columna de nombre y/o de correo.';
+      : 'Sube las dos listas y elige en cada una la columna de nombre, correo o cédula.';
+    // La cédula solo sirve si las dos listas la traen
+    if (ready && (state.A.docColumn == null) !== (state.B.docColumn == null)) {
+      hint.textContent += ' La cédula no se usará: solo una de las dos listas la tiene.';
+    }
   }
 
   // ---------- Comparación y resultados ----------
@@ -176,7 +200,12 @@
   );
 
   $('#compare').addEventListener('click', () => {
-    const toInput = (list) => ({ rows: dataRows(list), nameColumns: list.nameColumns, emailColumn: list.emailColumn });
+    const toInput = (list) => ({
+      rows: dataRows(list),
+      nameColumns: list.nameColumns,
+      emailColumn: list.emailColumn,
+      docColumn: list.docColumn,
+    });
     state.result = Matcher.matchLists(toInput(state.A), toInput(state.B), state.mode);
     state.tab = 'total';
     renderSummary();
@@ -215,10 +244,10 @@
 
   // Las etiquetas de "solo en…" llevan el nombre del archivo de cada lista
   const TABS = [
-    { id: 'total', label: () => 'Coincidencia al 100%', help: 'Coinciden el correo y el nombre: es la misma persona.' },
-    { id: 'parcial', label: () => 'Coincidencia parcial', help: 'Coincide solo el correo o solo el nombre.' },
-    { id: 'sinA', label: () => `Están solo en Lista 1 (${listName('A')})`, help: 'Personas de la Lista 1 que no coinciden con nadie de la Lista 2, ni por correo ni por nombre.' },
-    { id: 'sinB', label: () => `Están solo en Lista 2 (${listName('B')})`, help: 'Personas de la Lista 2 que no coinciden con nadie de la Lista 1, ni por correo ni por nombre.' },
+    { id: 'total', label: () => 'Coincidencia al 100%', help: 'Coinciden el nombre y el correo o la cédula: es la misma persona.' },
+    { id: 'parcial', label: () => 'Coincidencia parcial', help: 'Coincide solo una parte: el correo, la cédula o el nombre.' },
+    { id: 'sinA', label: () => `Están solo en Lista 1 (${listName('A')})`, help: 'Personas de la Lista 1 que no coinciden con nadie de la Lista 2, ni por correo, ni por cédula, ni por nombre.' },
+    { id: 'sinB', label: () => `Están solo en Lista 2 (${listName('B')})`, help: 'Personas de la Lista 2 que no coinciden con nadie de la Lista 1, ni por correo, ni por cédula, ni por nombre.' },
   ];
 
   function renderTabs() {
@@ -242,6 +271,7 @@
     const table = $('#result-table');
     const rowA = (p) => state.A.headerRow + 2 + p.index;
     const rowB = (p) => state.B.headerRow + 2 + p.index;
+    const cc = (p) => (p.rawDoc ? ` <small class="hint">CC ${esc(p.rawDoc)}</small>` : '');
     let head;
     let body;
     if (state.tab === 'total' || state.tab === 'parcial') {
@@ -250,15 +280,15 @@
       body = pairs.map(
         (p) => `<tr>
           <td><span class="tag ${p.type}">${TYPE_LABEL[p.type]}</span></td>
-          <td>${esc(p.a.name)} <small class="hint">fila ${rowA(p.a)}</small></td><td class="mail">${esc(p.a.rawEmail)}</td>
-          <td>${esc(p.b.name)} <small class="hint">fila ${rowB(p.b)}</small></td><td class="mail">${esc(p.b.rawEmail)}</td>
+          <td>${esc(p.a.name)} <small class="hint">fila ${rowA(p.a)}</small>${cc(p.a)}</td><td class="mail">${esc(p.a.rawEmail)}</td>
+          <td>${esc(p.b.name)} <small class="hint">fila ${rowB(p.b)}</small>${cc(p.b)}</td><td class="mail">${esc(p.b.rawEmail)}</td>
           <td>${esc(p.reason)}</td></tr>`
       );
     } else {
       const people = state.tab === 'sinA' ? r.sinCoincidenciaA : r.sinCoincidenciaB;
       const rowOf = state.tab === 'sinA' ? rowA : rowB;
       head = '<tr><th>Fila</th><th>Nombre</th><th>Correo</th></tr>';
-      body = people.map((p) => `<tr><td>${rowOf(p)}</td><td>${esc(p.name)}</td><td class="mail">${esc(p.rawEmail)}</td></tr>`);
+      body = people.map((p) => `<tr><td>${rowOf(p)}</td><td>${esc(p.name)}${cc(p)}</td><td class="mail">${esc(p.rawEmail)}</td></tr>`);
     }
     table.innerHTML = `<thead>${head}</thead><tbody>${body.join('') || '<tr><td colspan="6" class="empty">No hay personas en este grupo.</td></tr>'}</tbody>`;
   }
@@ -287,23 +317,20 @@
 
     // Parejas encontradas (primera hoja)
     const pairsSheet = wb.addWorksheet('Coincidencias');
-    pairsSheet.columns = [
-      { header: 'Resultado', width: 22 },
-      { header: 'Nombre (Lista 1)', width: 32 },
-      { header: 'Correo (Lista 1)', width: 32 },
-      { header: 'Fila Lista 1', width: 11 },
-      { header: 'Nombre (Lista 2)', width: 32 },
-      { header: 'Correo (Lista 2)', width: 32 },
-      { header: 'Fila Lista 2', width: 11 },
-      { header: 'Detalle', width: 50 },
+    // Columnas de cédula solo si alguna de las listas la trae
+    const withDoc = state.A.docColumn != null || state.B.docColumn != null;
+    const side = (n) => [
+      { header: `Nombre (Lista ${n})`, width: 32 },
+      { header: `Correo (Lista ${n})`, width: 32 },
+      ...(withDoc ? [{ header: `Cédula (Lista ${n})`, width: 15 }] : []),
+      { header: `Fila Lista ${n}`, width: 11 },
     ];
+    pairsSheet.columns = [{ header: 'Resultado', width: 22 }, ...side(1), ...side(2), { header: 'Detalle', width: 50 }];
     styleHeader(pairsSheet.getRow(1));
+    const cells = (p, list) => [p.name, p.rawEmail, ...(withDoc ? [p.rawDoc] : []), list.headerRow + 2 + p.index];
     r.pairs.forEach((p) => {
-      const row = pairsSheet.addRow([
-        TYPE_LABEL[p.type], p.a.name, p.a.rawEmail, state.A.headerRow + 2 + p.a.index,
-        p.b.name, p.b.rawEmail, state.B.headerRow + 2 + p.b.index, p.reason,
-      ]);
-      paintRow(row, 8, p.type);
+      const row = pairsSheet.addRow([TYPE_LABEL[p.type], ...cells(p.a, state.A), ...cells(p.b, state.B), p.reason]);
+      paintRow(row, pairsSheet.columns.length, p.type);
     });
 
     // Cada lista con su resultado al lado, coloreada fila por fila

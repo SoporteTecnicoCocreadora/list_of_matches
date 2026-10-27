@@ -117,7 +117,7 @@ body {
 #result-table td.mail { color: var(--muted); word-break: break-all; }
 .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
 .tag.total { background: var(--total); color: var(--total-text); }
-.tag.correo, .tag.nombre { background: var(--parcial); color: var(--parcial-text); }
+.tag.correo, .tag.nombre, .tag.cedula { background: var(--parcial); color: var(--parcial-text); }
 .tag.none { background: var(--none); color: var(--none-text); }
 .empty { padding: 16px; color: var(--muted); text-align: center; }
 

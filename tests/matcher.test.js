@@ -72,6 +72,29 @@ test('detecta el encabezado aunque haya filas de título antes y sugiere columna
   const rows = [['REPORTE DE ASISTENCIA', '', ''], ['', '', ''], ['Nombre', 'Apellido', 'Correo electrónico', 'Duración']];
   const header = M.detectHeaderRow(rows);
   assert.equal(header, 2);
-  assert.deepEqual(M.guessColumns(rows[header]), { nameColumns: [0, 1], emailColumn: 2 });
-  assert.deepEqual(M.guessColumns(['Nombre de usuario', 'Email', 'Nombre completo']), { nameColumns: [2], emailColumn: 1 });
+  assert.deepEqual(M.guessColumns(rows[header]), { nameColumns: [0, 1], emailColumn: 2, docColumn: null });
+  assert.deepEqual(M.guessColumns(['Nombre de usuario', 'Email', 'Nombre completo']), { nameColumns: [2], emailColumn: 1, docColumn: null });
+});
+
+test('cédula: compara solo los dígitos y sirve para el 100% junto con el nombre', () => {
+  assert.equal(M.parseDocument('1.032.435.040'), '1032435040');
+  assert.equal(M.parseDocument('CC 01032435040'), '1032435040');
+  assert.equal(M.parseDocument('123'), null);
+  const a = list([['Ana Ruiz', '', '1.032.435.040'], ['Luis Mora', 'lm@x.com', '555666'], ['Pepe Gil', 'pg@x.com', '777888']], [0], 1);
+  a.docColumn = 2;
+  const b = list([['Ana María Ruiz', 'otra@x.com', '1032435040'], ['Otro Nombre', 'zz@x.com', '555666'], ['Pepe Gil', 'pg@x.com', '999000']], [0], 1);
+  b.docColumn = 2;
+  const r = M.matchLists(a, b);
+  // Ana: nombre + cédula (sin correo en la lista 1) -> 100%
+  assert.deepEqual(r.total.map((p) => [p.a.index, p.b.index]), [[0, 0]]);
+  // Luis: solo la cédula -> parcial; Pepe: nombre y correo iguales pero cédulas distintas -> parcial
+  assert.deepEqual(r.parcial.map((p) => [p.type, p.a.index]), [['cedula', 1], ['correo', 2]]);
+  assert.match(r.parcial[1].reason, /cédula distinta/);
+  assert.equal(M.matchLists(a, b, 'cedula').total.length, 2);
+});
+
+test('detecta la columna de cédula por el encabezado, sin confundirla con el tipo de documento', () => {
+  assert.equal(M.guessColumns(['Nombre', 'Tipo de documento', 'Número de documento', 'Correo']).docColumn, 2);
+  assert.equal(M.guessColumns(['Nombre', 'C.C.', 'Email']).docColumn, 1);
+  assert.equal(M.guessColumns(['Nombre', 'Email']).docColumn, null);
 });

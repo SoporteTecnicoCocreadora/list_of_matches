@@ -13,7 +13,7 @@
   <header class="top">
     <div class="wrap">
       <h1>Cruce de listas</h1>
-      <p>Sube dos listas de Excel y encuentra qué personas están en ambas, comparando por correo y nombre.
+      <p>Sube dos listas de Excel y encuentra qué personas están en ambas, comparando por nombre, correo y cédula.
         <span class="private">Los archivos se procesan en tu navegador: no se suben a ningún servidor.</span></p>
     </div>
   </header>
@@ -45,8 +45,9 @@
       <h2><span class="num">2</span> Compara</h2>
       <div class="mode">
         <span>Comparar por:</span>
-        <label><input type="radio" name="mode" value="ambos" checked> Correo y nombre <em>(recomendado)</em></label>
+        <label><input type="radio" name="mode" value="ambos" checked> Todo: nombre, correo y cédula <em>(recomendado)</em></label>
         <label><input type="radio" name="mode" value="correo"> Solo correo</label>
+        <label><input type="radio" name="mode" value="cedula"> Solo cédula</label>
         <label><input type="radio" name="mode" value="nombre"> Solo nombre</label>
       </div>
       <button id="compare" class="btn primary" disabled>Comparar listas</button>
@@ -70,11 +71,12 @@
     <section class="step help">
       <h2>¿Cómo compara?</h2>
       <ul>
-        <li><b>Coincidencia al 100%:</b> coinciden el correo y el nombre.</li>
-        <li><b>Coincidencia parcial:</b> coincide solo el correo o solo el nombre.</li>
-        <li><b>Están solo en Lista 1 / solo en Lista 2:</b> personas de esa lista que no coinciden con nadie de la otra, ni por correo ni por nombre.</li>
+        <li><b>Coincidencia al 100%:</b> coinciden el nombre y el correo o la cédula.</li>
+        <li><b>Coincidencia parcial:</b> coincide solo una parte: el correo, la cédula o el nombre (o coincide todo pero las cédulas son distintas).</li>
+        <li><b>Están solo en Lista 1 / solo en Lista 2:</b> personas de esa lista que no coinciden con nadie de la otra, ni por correo, ni por cédula, ni por nombre.</li>
+        <li><b>Cédula:</b> se usa solo si las dos listas tienen una columna de cédula o documento. Se comparan solo los números (1.032.435.040 = 1032435040).</li>
         <li><b>El nombre coincide</b> si tiene al menos dos palabras en común (p. ej. nombre y apellido), sin importar el orden. Una sola palabra (solo "Carlos") no basta, porque se repite mucho.</li>
-        <li>Solo se comparan las columnas de nombre y de correo que estén marcadas en cada lista. Si el nombre y el apellido vienen separados, se unen.</li>
+        <li>Solo se comparan las columnas de nombre, correo y cédula que estén marcadas en cada lista; las demás se ignoran. Si el nombre y el apellido vienen separados, se unen.</li>
         <li><b>Correos ocultos de Meet</b> (<code>fr.g*************@***.com</code>): se usan las letras visibles, el largo del correo (cada * es una letra) y el final del dominio.</li>
         <li>Se ignoran mayúsculas, tildes y signos, y se toleran pequeños errores de digitación en los nombres. Cada persona se empareja una sola vez.</li>
       </ul>
